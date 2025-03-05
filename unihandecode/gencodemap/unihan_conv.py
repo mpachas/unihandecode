@@ -48,7 +48,7 @@ class UnihanConv():
         max_len = max(max_len, len(tbl))
         out_fn = dest + '.bz2'
         # Update BZ2File call to use named parameters for Python 3.13 compatibility
-        outfile = bz2.BZ2File(out_fn, 'w', compresslevel=9)
+        outfile = bz2.BZ2File(filename=out_fn, mode='w', compresslevel=9)
         try:
             pickle.dump((tbl, max_len), outfile, protocol=2)
         finally:

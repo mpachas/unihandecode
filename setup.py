@@ -8,28 +8,46 @@ from distutils.command.build import build
 import os,threading
 import sys
 import shutil
+import importlib.util
+import importlib.machinery
 
 # Don't import from the package itself during build
 # This allows us to install dependencies first
 SUPPORTED_LANG=['kr','ja','zh','vn','yue']
 
+def import_module_from_path(module_name, file_path):
+    """Import a module from file path without importing the whole package."""
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
 def gen_map():
-    import unihandecode.gencodemap as gencodemap
+    # Import directly from file path instead of package
+    unihan_conv = import_module_from_path(
+        "unihan_conv", 
+        os.path.join('unihandecode', 'gencodemap', 'unihan_conv.py')
+    )
     unihan_source = os.path.join('unihandecode','data','Unihan_Readings.txt')
     for lang in SUPPORTED_LANG:
         dest = os.path.join('unihandecode',lang+'codepoints.pickle')
-        u = gencodemap.UnihanConv(lang)
+        u = unihan_conv.UnihanConv(lang)
         u.run(source = unihan_source, dest=dest)
 
 def catdict(src_a, dst):
-    outdict    = open(dst,'wb')
+    outdict = open(dst,'wb')
     for src_f in src_a:
       shutil.copyfileobj(open(os.path.join('unihandecode','data',src_f),'rb'), outdict)
     outdict.close()
 
 def pre_build():
-    import unihandecode.gencodemap as gencodemap
-    u = gencodemap.Unicodepoints()
+    # Import directly from file path instead of package
+    unicodepoints = import_module_from_path(
+        "unicodepoints", 
+        os.path.join('unihandecode', 'gencodemap', 'unicodepoints.py')
+    )
+    u = unicodepoints.Unicodepoints()
     u.run(os.path.join('unihandecode','unicodepoints.pickle'))
     gen_map()
 
@@ -83,11 +101,10 @@ d = Unidecoder(lang='ja')
       include_package_data = True,
       package_data = {'unihandecode':  ['*.pickle.bz2']},
       provides = [ 'unihandecode' ],
-      install_requires = [ 'pykakasi;python_version>="3.5"', 'six' ],
+      install_requires = [ 'pykakasi;python_version>="3.5"', 'importlib-resources;python_version<"3.9"' ],
       setup_requires = [],
       test_suite = 'nose.collector',
       tests_require = tests_require,
-      # Use pyproject.toml to handle build dependencies
       cmdclass = {
           'build': my_build
       }

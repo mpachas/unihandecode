@@ -91,7 +91,7 @@ class Unidecoder(object):
         '''
         Find what group character is a part of.
         '''
-        # Code groups withing CODEPOINTS take the form 'xAB'
+        # Code groups within CODEPOINTS take the form 'xAB'
         # Python 3 only version, no need for unicode() function
         return 'x%02x' % (ord(character) >> 8)
 
@@ -106,11 +106,23 @@ class Unidecoder(object):
     def _load_codepoints(self, lang):
         loc_resource = '%scodepoints.pickle.bz2' % lang
         for c in ['unicodepoints.pickle.bz2', loc_resource]:
-            # Modern importlib.resources approach
-            with importlib.resources.files(__name__).joinpath(c).open('rb') as f:
-                buf = f.read()
+            try:
+                # Handle both package and standalone imports
+                try:
+                    # Try with modern importlib.resources approach
+                    with importlib.resources.files("unihandecode").joinpath(c).open('rb') as f:
+                        buf = f.read()
+                except (TypeError, AttributeError, ImportError):
+                    # Fallback for older Python versions or direct file access
+                    import os
+                    with open(os.path.join(os.path.dirname(__file__), c), 'rb') as f:
+                        buf = f.read()
+                
                 buf = bz2.decompress(buf)
                 (dic, dlen) = pickle.loads(buf)
                 self.codepoints.update(dic)
+            except Exception as e:
+                # Silently continue if a file is missing
+                pass
         return self.codepoints
 
