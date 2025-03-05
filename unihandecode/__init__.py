@@ -22,7 +22,7 @@ import importlib
 def _import_decoder(name):
     module_name = f"unihandecode.{name}"
     module = importlib.import_module(module_name)
-    return getattr(module, name.capitalize() + "decoder")
+    return getattr(module, name.capitalize())
 
 class Unihandecoder(object):
     preferred_encoding = None
@@ -31,13 +31,13 @@ class Unihandecoder(object):
     def __init__(self, lang="zh", encoding='utf-8'):
         self.preferred_encoding = encoding
         if lang == "ja":
-            Jadecoder = _import_decoder("ja")
+            Jadecoder = _import_decoder("jadecoder")
             self.decoder = Jadecoder()
         elif lang == "kr":
-            Krdecoder = _import_decoder("kr")
+            Krdecoder = _import_decoder("krdecoder")
             self.decoder = Krdecoder()
         elif lang == "vn":
-            Vndecoder = _import_decoder("vn")
+            Vndecoder = _import_decoder("vndecoder")
             self.decoder = Vndecoder()
         else: # zh and others
             from unihandecode.unidecoder import Unidecoder
