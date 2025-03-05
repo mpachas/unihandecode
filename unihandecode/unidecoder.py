@@ -60,9 +60,8 @@ it under the same terms as Perl itself.
 
 import bz2
 import re
-from six.moves import cPickle
-
-from pkg_resources import resource_stream
+import pickle  # Use standard pickle instead of six.moves.cPickle
+import importlib.resources
 
 class Unidecoder(object):
 
@@ -93,28 +92,25 @@ class Unidecoder(object):
         Find what group character is a part of.
         '''
         # Code groups withing CODEPOINTS take the form 'xAB'
-        try:#python2 
-            return 'x%02x' % (ord(unicode(character)) >> 8)
-        except: 
-            return 'x%02x' % (ord(character) >> 8)
+        # Python 3 only version, no need for unicode() function
+        return 'x%02x' % (ord(character) >> 8)
 
     def grouped_point(self, character):
         '''
         Return the location the replacement character is in the list for a
         the group character is a part of.
         '''
-        try:#python2
-            return ord(unicode(character)) & 255
-        except:
-            return ord(character) & 255
+        # Python 3 only version, no need for unicode() function
+        return ord(character) & 255
 
     def _load_codepoints(self, lang):
         loc_resource = '%scodepoints.pickle.bz2' % lang
         for c in ['unicodepoints.pickle.bz2', loc_resource]:
-            with resource_stream(__name__, c) as f:
+            # Modern importlib.resources approach
+            with importlib.resources.files(__name__).joinpath(c).open('rb') as f:
                 buf = f.read()
                 buf = bz2.decompress(buf)
-                (dic, dlen) = cPickle.loads(buf)
+                (dic, dlen) = pickle.loads(buf)
                 self.codepoints.update(dic)
         return self.codepoints
 
