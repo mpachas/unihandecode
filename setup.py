@@ -8,11 +8,13 @@ from distutils.command.build import build
 import os,threading
 import sys
 import shutil
-import unihandecode.gencodemap as gencodemap
 
+# Don't import from the package itself during build
+# This allows us to install dependencies first
 SUPPORTED_LANG=['kr','ja','zh','vn','yue']
 
 def gen_map():
+    import unihandecode.gencodemap as gencodemap
     unihan_source = os.path.join('unihandecode','data','Unihan_Readings.txt')
     for lang in SUPPORTED_LANG:
         dest = os.path.join('unihandecode',lang+'codepoints.pickle')
@@ -26,6 +28,7 @@ def catdict(src_a, dst):
     outdict.close()
 
 def pre_build():
+    import unihandecode.gencodemap as gencodemap
     u = gencodemap.Unicodepoints()
     u.run(os.path.join('unihandecode','unicodepoints.pickle'))
     gen_map()
@@ -43,8 +46,6 @@ class my_install(install):
         install.run(self) # run normal build command
 
 tests_require = ['nose','coverage','mock']
-if sys.version_info < (2, 7):
-    tests_require.append('unittest2')
 
 setup(name='Unihandecode',
       version='0.81',
@@ -82,7 +83,8 @@ d = Unidecoder(lang='ja')
       include_package_data = True,
       package_data = {'unihandecode':  ['*.pickle.bz2']},
       provides = [ 'unihandecode' ],
-      install_requires = [ 'pykakasi', 'six' ],
+      install_requires = [ 'pykakasi;python_version>="3.5"', 'six' ],
+      setup_requires = [],
       test_suite = 'nose.collector',
       tests_require = tests_require,
       cmdclass = {

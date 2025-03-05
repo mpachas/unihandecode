@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys
-import bz2
-from six.moves import cPickle
 
 __license__ = 'GPL 3'
 __copyright__ = '2009, John Schember <john@nachtimwald.com>'
 __docformat__ = 'restructuredtext en'
+
+import bz2
+import pickle
 
 '''
 Unicode code point dictionary.
@@ -21,7 +21,7 @@ class Unicodepoints():
         out_fn = dest + '.bz2'
         outfile = bz2.BZ2File(out_fn, 'w', 1024**2, 9)
         try:
-            cPickle.dump((self.CODEPOINTS, len(self.CODEPOINTS)), outfile, protocol=2)
+            pickle.dump((self.CODEPOINTS, len(self.CODEPOINTS)), outfile, protocol=2)
         finally:
             outfile.close()
 

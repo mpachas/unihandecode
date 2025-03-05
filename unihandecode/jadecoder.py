@@ -17,27 +17,43 @@ This functionality is owned by Kakasi Japanese processing engine.
 Copyright (c) 2010,2015,2018 Hiroshi Miura
 '''
 
-import os,re
+import os, re
 
 from unihandecode.unidecoder import Unidecoder
-import pykakasi
+
+# Defer pykakasi import to runtime when actually needed
+pykakasi_available = None
+kakasi = None
+
+def _load_pykakasi():
+    global pykakasi_available, kakasi
+    try:
+        import pykakasi
+        pykakasi_available = True
+        kakasi = pykakasi.kakasi()
+        kakasi.setMode("J", "a")
+        kakasi.setMode("E", "a")
+        kakasi.setMode("H", "a")
+        kakasi.setMode("K", "a")
+        kakasi.setMode("s", True)
+        kakasi.setMode("C", True)
+        return kakasi.getConverter()
+    except ImportError:
+        pykakasi_available = False
+        return None
 
 class Jadecoder(Unidecoder):
-    kakasi = None
     codepoints = {}
+    conv = None
 
     def __init__(self):
         self._load_codepoints('ja')
-        self.kakasi = pykakasi.kakasi()
-        self.kakasi.setMode("J","a")
-        self.kakasi.setMode("E","a")
-        self.kakasi.setMode("H","a")
-        self.kakasi.setMode("K","a")
-        self.kakasi.setMode("s", True)
-        self.kakasi.setMode("C", True)
-        self.conv=self.kakasi.getConverter()
+        self.conv = _load_pykakasi()
 
     def decode(self, text):
-            result=self.conv.do(text)
-            return re.sub('[^\x00-\x7f]', lambda x: self.replace_point(x.group()),result)
+        if self.conv:
+            result = self.conv.do(text)
+            return re.sub('[^\x00-\x7f]', lambda x: self.replace_point(x.group()), result)
+        else:
+            return super().decode(text)
 

@@ -2,18 +2,17 @@
 # -*- coding: utf-8 -*-
 import sys, re
 import bz2
-from six import PY2
-from six.moves import cPickle
+import pickle
 
 __license__ = 'GPL 3'
 __copyright__ = '2010,2018, Hiroshi Miura <miurahr@linux.com>'
 __docformat__ = 'restructuredtext en'
 
 def o(str):
-    if PY2:
-      return ord(str.decode("utf-8"))
-    else:
-      return ord(str)
+    try:
+        return ord(str.decode("utf-8"))  # Python 2
+    except AttributeError:
+        return ord(str)  # Python 3
 
 class UnihanConv():
 
@@ -50,7 +49,7 @@ class UnihanConv():
         out_fn = dest + '.bz2'
         outfile = bz2.BZ2File(out_fn, 'w', 1024**2, 9)
         try:
-            cPickle.dump((tbl, max_len), outfile, protocol=2)
+            pickle.dump((tbl, max_len), outfile, protocol=2)
         finally:
             outfile.close()
 
@@ -97,14 +96,8 @@ class UnihanConv():
 
         r1 = re.compile(r'U\+([0-9A-F]{2,3})([0-9A-F]{2}\b)')
         for line in f:
-            try: # pragma: no cover
-                uline = unicode(line, "utf-8") # python2
-                items = uline[:-1].split('\t')
-                pass
-            except: # pragma: no cover
-                items = line[:-1].split('\t') # python3
-                pass
-            
+            items = line[:-1].split('\t')
+
             try:
                 code = r1.sub(r'\1\t\2',items[0]).split('\t')
                 category = items[1]

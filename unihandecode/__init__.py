@@ -16,10 +16,13 @@ Tranliterate the string from unicode characters to ASCII in Chinese and others.
 
 '''
 import unicodedata
-from unihandecode.unidecoder import Unidecoder
-from unihandecode.jadecoder import Jadecoder
-from unihandecode.krdecoder import Krdecoder
-from unihandecode.vndecoder import Vndecoder
+import importlib
+
+# Use lazy imports to avoid loading modules during package installation
+def _import_decoder(name):
+    module_name = f"unihandecode.{name}"
+    module = importlib.import_module(module_name)
+    return getattr(module, name.capitalize() + "decoder")
 
 class Unihandecoder(object):
     preferred_encoding = None
@@ -28,29 +31,21 @@ class Unihandecoder(object):
     def __init__(self, lang="zh", encoding='utf-8'):
         self.preferred_encoding = encoding
         if lang == "ja":
+            Jadecoder = _import_decoder("ja")
             self.decoder = Jadecoder()
         elif lang == "kr":
+            Krdecoder = _import_decoder("kr")
             self.decoder = Krdecoder()
         elif lang == "vn":
+            Vndecoder = _import_decoder("vn")
             self.decoder = Vndecoder()
-        else: #zh and others
+        else: # zh and others
+            from unihandecode.unidecoder import Unidecoder
             self.decoder = Unidecoder(lang)
 
     def _text_filter(self, text):
-        try:
-            unicode # python2
-            if not isinstance(text, unicode):
-                try:
-                    text = unicode(text)
-                except: # pragma: no cover
-                    try:
-                        text = text.decode(self.preferred_encoding)
-                    except:
-                        text = text.decode('utf-8', 'replace')
-        except: # python3, str is unicode
-            pass
-        #at first unicode normalize it. (see Unicode standards)
-        return unicodedata.normalize('NFC',text)
+        # at first unicode normalize it. (see Unicode standards)
+        return unicodedata.normalize('NFC', text)
 
     def decode(self, text):
         return self.decoder.decode(self._text_filter(text))
