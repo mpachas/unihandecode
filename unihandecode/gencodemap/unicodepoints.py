@@ -17,15 +17,16 @@ a single dictionary.
 
 class Unicodepoints():
 
-    def run(self, dest):
-        out_fn = dest + '.bz2'
-        outfile = bz2.BZ2File(out_fn, 'w', 1024**2, 9)
-        try:
-            pickle.dump((self.CODEPOINTS, len(self.CODEPOINTS)), outfile, protocol=2)
-        finally:
-            outfile.close()
+	def run(self, dest):
+		out_fn = dest + '.bz2'
+		# Update BZ2File call to use named parameters for Python 3.13 compatibility
+		outfile = bz2.BZ2File(out_fn, 'w', compresslevel=9)
+		try:
+			pickle.dump((self.CODEPOINTS, len(self.CODEPOINTS)), outfile, protocol=2)
+		finally:
+			outfile.close()
 
-    CODEPOINTS = {
+	CODEPOINTS = {
 	'x20': [
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '', '', '', '',
 		'-', '-', '-', '-', '--', '--', '||', '_', '\'', '\'', ',', '\'', '"', '"', ',,', '"',

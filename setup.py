@@ -87,7 +87,8 @@ d = Unidecoder(lang='ja')
       setup_requires = [],
       test_suite = 'nose.collector',
       tests_require = tests_require,
+      # Use pyproject.toml to handle build dependencies
       cmdclass = {
-          #'install':my_install,
-          'build':my_build}
+          'build': my_build
+      }
 )

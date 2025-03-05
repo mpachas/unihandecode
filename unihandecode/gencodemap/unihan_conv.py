@@ -47,7 +47,8 @@ class UnihanConv():
         self.process_readings(source, tbl)
         max_len = max(max_len, len(tbl))
         out_fn = dest + '.bz2'
-        outfile = bz2.BZ2File(out_fn, 'w', 1024**2, 9)
+        # Update BZ2File call to use named parameters for Python 3.13 compatibility
+        outfile = bz2.BZ2File(out_fn, 'w', compresslevel=9)
         try:
             pickle.dump((tbl, max_len), outfile, protocol=2)
         finally:
@@ -68,7 +69,8 @@ class UnihanConv():
                 self.readings[lcode] = ("%s "%pron, p)
 
     def gen_map(self, tbl, ucode):
-        if ucode is 0:
+        # Fix the 'is 0' comparison to '== 0'
+        if ucode == 0:
             return
 
         tmap = []
